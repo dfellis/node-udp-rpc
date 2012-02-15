@@ -7,7 +7,7 @@ A lightweight UDP-based RPC protocol for Node.js inspired by (but definitely not
     flagId packetNumber xor  data
       0       1 - 4      5  6 - 500
 
-Each packet start width a byte that identifies the packet group and whether this is the last packet in the set (flagId, 7-bit identifier with top bit a last packet flag).
+Each packet starts with a byte that identifies the packet group and whether this is the last packet in the set (flagId, 7-bit identifier with top bit a last packet flag).
 
 After this, a 32-bit unsigned integer tags each packet in the order it should be reconstituted.
 
