@@ -9,7 +9,7 @@ A lightweight UDP-based RPC protocol for Node.js inspired by (but definitely not
 
 Each packet starts with a byte that identifies the packet group and whether this is the last packet in the set (flagId, 7-bit identifier with top bit a last packet flag).
 
-After this, a 32-bit unsigned integer tags each packet in the order it should be reconstituted.
+After this, a 32-bit unsigned integer tags each packet in the order it should be reconstituted. May reconsider the size of this integer -- it allows RPC requests/responses **1.92TB** in size. There's not enough error correction in this lightweight protocol for that, no way to rerequest a particular packet (nor desire since that would imply caching overhead and knowledge of higher layers of the protocol), and arbitrary size responses can be implemented above this layer by requesting fragments of the data consecutively or in parallel.
 
 Each packet contains a 1 byte xor of the data that follows it (or in the case of the last packet, an xor of all data transmitted.
 
