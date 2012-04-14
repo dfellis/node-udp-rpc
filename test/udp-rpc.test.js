@@ -8,16 +8,20 @@ var testFuncs = [
 ];
 
 var inited = 0;
-var drone1 = new udpRpc('udp4', 12345, testFuncs, whenInited);
-var drone2 = new udpRpc('udp4', 11235, testFuncs, whenInited);
+var node1 = new udpRpc('udp4', 12345, testFuncs);
+var node2 = new udpRpc('udp4', 11235, testFuncs);
+
+node1.on('init', whenInited);
+node2.on('init', whenInited);
+
 function whenInited() {
 	inited++;
 	if(inited == 2) {
-		drone1.echo('localhost:11235', 'Hello!', function(text) {
+		node1.echo('localhost:11235', 'Hello!', function(text) {
 			console.log("Back from localhost:11235");
 			console.log(text);
-			drone1.die();
-			drone2.die();
+			node1.die();
+			node2.die();
 		});
 	}
 }
