@@ -3,7 +3,7 @@
 		{"name": "David Ellis", "email": "d.f.ellis@ieee.org"}
 	],
 	"name": "udp-rpc",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "A simple UDP-based RPC server built on Node.js for low-bandwidth IPC.",
 	"main": "./lib/udp-rpc.js"
 }
