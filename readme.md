@@ -33,7 +33,60 @@ There is no enforcement of what a request or response "should" look like other t
 
 ## Usage
 
-See the test script for now.
+After installing the library with [npm](http://npmjs.org) (``npm install udp-rpc``), you can get the constructor by:
+
+    var UdpRpc = require('udp-rpc');
+
+The module inherits features of both the ``events.EventEmitter`` and ``dgram`` modules. At the moment, it assumes you want to implement a "peer", an RPC server that calls other RPC servers with the exact same functions. To create such a peer, you pass the constructor three variables:
+
+    var node = new UdpRpc(dgramType, port, arrayOfNamedFunctions);
+
+* ``dgramType`` is taken from the [``dgram.createSocket`` method](http://nodejs.org/api/dgram.html#dgram_dgram_createsocket_type_callback) and can only be ``'udp4'`` or ``'udp6'``.
+* ``port`` is taken from the [``dgram.bind`` method](http://nodejs.org/api/dgram.html#dgram_dgram_bind_port_address) and is whatever networking port number you desire.
+* ``arrayOfNamedFunctions`` is exactly like it sounds like, an array consisting of functions that have been properly named:
+
+        [
+            function echo(source, text, callback) {
+	        callback(text);
+            },
+            function whoAmI(source, callback) {
+                callback(source);
+            },
+            function slowAdder(source, num1, num2, callback) {
+                setTimeout(function() {
+                    callback(num1/1 + num2/1);
+                }, 10000*Math.random());
+            }
+        ]
+
+    These functions are attached to the generated object using the names defined, so it would be wise to avoid all of [the public ``emitter`` methods](http://nodejs.org/api/events.html). Also the method names ``methods``, ``messages``, ``packets``, ``genId``, ``srvPort``, ``address``, ``dgram``, and ``die`` are reserved, though several of these may become private in the future and no longer conflict.
+
+The created object emits the following events:
+
+* ``init`` - Fired once the object is ready for usage.
+* ``death`` - Fired when the object cleans itself up (right now only when explicitly calling the ``die`` method)
+* ``execRpc`` - Fired when an RPC request onto a remote peer is started. Passes to the event handler the ``method`` name, the remote ``address``, an array of ``rpcParams``, and the ``callback`` function to fire when the response is completed.
+* ``sentRpc`` - Fired when an RPC request onto a remote peer has completed transmission from the current peer, but before any response. The same four parameters as ``execRpc`` are passed along with an ``err`` object (that may be null if no error occured). 
+* ``receivedPacket`` - Fired when the ``dgram`` server receives a packet of data of any type. Passes to the event handler the raw ``message`` and ``info`` objects as defined by the ``dgram`` method type.
+* ``receivedRpcRequest`` - Fired when enough packets have been received to assemble the raw RPC string and determine that it is a request type. Passes to the event handler the ``request`` string and the ``source`` peer string.
+* ``receivedRpcResponse`` - Fired when enough packets have been received to assemble the raw RPC string and determine that it is a response type. Passes to the event handler the ``response`` string and the ``source`` peer string.
+* ``receivedUnknownMessage`` - Fired when enough packets have been received to assemble the raw string according to the packet format and an unrecognizable set of data is received. The ``message`` string and the ``source`` peer string are again provided.
+
+You **must** wait for the ``init`` event before executing any of the bound RPC methods.
+
+The RPC methods for the "server" must have at least two arguments, the very first argument is the ``source`` string, indicating to the method the IP and port number of the "client," and the very last argument is the ``callback`` method that the results are passed into. Custom arguments for the method are placed in-between.
+
+It is the client's duty to know the arguments that must be passed in for the RPC call and the arguments it will receive when the request is completed. Calling an RPC method on a remote server also requires at least two arguments, the ``remote`` server address, and the ``callback`` function to receive the response results. For example:
+
+    node.echo("127.0.0.1:12345", "Hello, World!", function(text) {
+        console.log(text);
+    });
+
+    node.whoAmI("1.2.3.4:5", function(myPublicIPandPort) {
+        console.log(myPublicIPandPort);
+    });
+
+Assuming the previously-defined RPC methods are to be used.
 
 ## License (MIT)
 
